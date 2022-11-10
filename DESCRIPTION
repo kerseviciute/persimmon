@@ -1,0 +1,13 @@
+Package: persimmon
+Type: Package
+Title: Find DMRs using Parsimonious Temporal Aggregation
+Version: 1.0
+Date: 2022-11-10
+Author: Ieva Kerševičiūtė
+Maintainer: Ieva Kerševičiūtė <kerseviciute.ieva@gmail.com>
+Description: More about what it does (maybe more than one line)
+License: What license is it under?
+RoxygenNote: 7.2.0
+Encoding: UTF-8
+Imports:
+Suggests:
