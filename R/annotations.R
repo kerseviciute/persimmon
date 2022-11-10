@@ -31,6 +31,7 @@ extractSortedAnnotations <- function(rgset, chromosomes = NULL) {
     .[ chr %in% chromosomes ] %>%
     GenomicRanges::makeGRangesFromDataFrame(keep.extra.columns = TRUE, start.field = 'pos', end.field = 'pos')
 
+  # Update rownames of the granges object
   names(map) <- GenomicRanges::mcols(map) %>% .[ , 1 ]
   GenomicRanges::mcols(map) <- NULL
   map <- GenomicRanges::sort(map)
