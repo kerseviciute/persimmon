@@ -42,11 +42,13 @@ split <- function(granges, maxSplit = 50000) {
 #' @param maxSplit maximum split size, integer
 #'
 #' @import GenomicRanges
+#' @import foreach
+#' @importFrom dplyr %>%
 #'
 splitChromosomes <- function(granges, maxSplit = 50000) {
   byChromosome <- GenomicRanges::split(granges, seqnames(granges))
 
-  foreach(chr = byChromosome) %do% {
+  foreach::foreach(chr = byChromosome) %do% {
     split(chr, maxSplit = maxSplit)
   } %>%
     unlist %>%

@@ -3,4 +3,6 @@
 export(extractSortedAnnotations)
 import(GenomicRanges)
 import(data.table)
+import(foreach)
 import(minfi)
+importFrom(dplyr,"%>%")
