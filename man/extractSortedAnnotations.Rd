@@ -4,15 +4,15 @@
 \alias{extractSortedAnnotations}
 \title{Sorted annotations}
 \usage{
-extractSortedAnnotations(rgset, chromosomes = NULL)
+extractSortedAnnotations(set, chromosomes = NULL)
 }
 \arguments{
-\item{rgset}{a _RGChannelSet_ or _RGChannelSetExtended_ object}
+\item{set}{a _RGChannelSet_, _RGChannelSetExtended_ or _MethylSet_ object}
 
 \item{chromosomes}{a list of chromosomes for which to extract annotations. Will
 return all chromosomes if not specified.}
 }
 \description{
-Get sorted annotations from _RGChannelSet_ or _RGChannelSetExtended_
+Get sorted annotations from _RGChannelSet_, _RGChannelSetExtended_ or _MethylSet_
 object from specified chromosomes.
 }

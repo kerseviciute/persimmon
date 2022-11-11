@@ -1,10 +1,10 @@
 #'
 #' Sorted annotations
 #'
-#' @description Get sorted annotations from _RGChannelSet_ or _RGChannelSetExtended_
+#' @description Get sorted annotations from _RGChannelSet_, _RGChannelSetExtended_ or _MethylSet_
 #' object from specified chromosomes.
 #'
-#' @param rgset a _RGChannelSet_ or _RGChannelSetExtended_ object
+#' @param set a _RGChannelSet_, _RGChannelSetExtended_ or _MethylSet_ object
 #' @param chromosomes a list of chromosomes for which to extract annotations. Will
 #' return all chromosomes if not specified.
 #'
@@ -14,12 +14,13 @@
 #'
 #' @export
 #'
-extractSortedAnnotations <- function(rgset, chromosomes = NULL) {
-  if (!any(class(rgset) %in% c('RGChannelSet', 'RGChannelSetExtended'))) {
-    stop('Expecting an object of type \'RGChannelSet\' or \'RGChannelSetExtended\'')
+extractSortedAnnotations <- function(set, chromosomes = NULL) {
+  classes <- c('RGChannelSet', 'RGChannelSetExtended', 'MethylSet')
+  if (!any(classes %in% class(set))) {
+    stop('Object should be of type ', paste(classes, collapse = ', '))
   }
 
-  annotations <- minfi::getAnnotation(rgset) %>%
+  annotations <- minfi::getAnnotation(set) %>%
     as.data.table
 
   if (is.null(chromosomes)) {
