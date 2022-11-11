@@ -8,6 +8,8 @@
 #' @param granges GRanges object
 #' @param maxSplit maximum split size, integer
 #'
+#' @import GenomicRanges
+#'
 split <- function(granges, maxSplit = 50000) {
   if (length(granges) < maxSplit) {
     return(granges)
@@ -39,11 +41,14 @@ split <- function(granges, maxSplit = 50000) {
 #' @param granges GRanges object
 #' @param maxSplit maximum split size, integer
 #'
+#' @import GenomicRanges
+#'
 splitChromosomes <- function(granges, maxSplit = 50000) {
   byChromosome <- GenomicRanges::split(granges, seqnames(granges))
 
   foreach(chr = byChromosome) %do% {
     split(chr, maxSplit = maxSplit)
   } %>%
-    unlist
+    unlist %>%
+    GenomicRanges::GRangesList()
 }
