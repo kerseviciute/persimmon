@@ -6,7 +6,7 @@ Date: 2022-11-10
 Author: Ieva Kerševičiūtė
 Maintainer: Ieva Kerševičiūtė <kerseviciute.ieva@gmail.com>
 Description: More about what it does (maybe more than one line)
-License: What license is it under?
+License: MIT License
 RoxygenNote: 7.2.0
 Encoding: UTF-8
 Imports:
