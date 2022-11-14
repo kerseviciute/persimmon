@@ -22,11 +22,11 @@ split <- function(granges, maxSplit = 50000) {
   grangesB <- granges[ (splitAt + 1):length(granges) ]
 
   if (length(grangesA) > maxSplit) {
-    grangesA <- split(grangesA)
+    grangesA <- split(grangesA, maxSplit)
   }
 
   if (length(grangesB) > maxSplit) {
-    grangesB <- split(grangesB)
+    grangesB <- split(grangesB, maxSplit)
   }
 
   list(grangesA, grangesB)
