@@ -40,4 +40,63 @@ extractSortedAnnotations <- function(set, chromosomes = NULL) {
   return(map)
 }
 
+sortAnnotations <- function(granges, ...) {
+  if ('GRanges' %in% class(granges)) {
+    return(sortAnnotationsGRanges(granges, ...))
+  }
 
+  if (!any(c('data.frame', 'data.table', 'DFrame') %in% class(granges))) {
+    return(sortAnnotationsDataTable(as.data.table(granges), ...))
+  }
+
+  stop('Annotation sorting not implemented for objects of class ', class(granges), '. Please convert it to GRanges, data.frame or data.table object.')
+}
+
+sortAnnotationsGRanges <- function(granges, chromosomes = NULL, verbose = FALSE) {
+  if (is.null(chromosomes)) {
+    if (verbose) message('[ Selecting all available chromosomes from the supplied annotation ]')
+    chromosomes <- seqnames(granges)
+  } else {
+    if (verbose) message('[ Selecting ', paste(chromosomes, collapse = ', '), ' chromosomes from the supplied annotation ]')
+  }
+
+  if (is.null(names(granges))) {
+    if (!('Name' %in% colnames(mcols(granges)))) {
+      stop('Unable to determine probe positions from current annotation. Please set GRanges names to probe names or add a "Name" metadata column to your GRanges object')
+    }
+
+    if (verbose) message('[ Setting GRanges names to probe names ]')
+    names(granges) <- mcols(granges)[ , 'Name' ]
+  }
+
+  granges <- granges[ seqnames(granges) %in% chromosomes ]
+  granges <- GenomicRanges::sort(granges)
+
+  return(granges)
+}
+
+sortAnnotationsDataTable <- function(granges, chromosomes = NULL, verbose = FALSE) {
+  if (!all(c('Name', 'chr', 'pos') %in% colnames(granges))) {
+    # TODO: proper error message
+    stop('Missing columns')
+  }
+
+  if (is.null(chromosomes)) {
+    if (verbose) message('[ Selecting all available chromosomes from the supplied annotation ]')
+    chromosomes <- unique(annotations[ , chr ])
+  } else {
+    if (verbose) message('[ Selecting ', paste(chromosomes, collapse = ', '), ' chromosomes from the supplied annotation ]')
+  }
+
+  map <- granges %>%
+    .[ , list(chr, pos, Name) ] %>%
+    .[ chr %in% chromosomes ] %>%
+    GenomicRanges::makeGRangesFromDataFrame(keep.extra.columns = TRUE, start.field = 'pos', end.field = 'pos')
+
+  # Update rownames of the granges object
+  names(map) <- GenomicRanges::mcols(map) %>% .[ , 1 ]
+  GenomicRanges::mcols(map) <- NULL
+  map <- GenomicRanges::sort(map)
+
+  return(map)
+}

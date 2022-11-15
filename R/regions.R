@@ -156,17 +156,14 @@ prepareBeta <- function(beta, scale = TRUE, verbose = TRUE) {
 #' @import dplyr
 #' @import data.table
 #'
-findMethRegions <- function(rgset, chromosomes = NULL, maxSplit = 50000, allowParallel = FALSE, verbose = FALSE, ...) {
-  granges <- extractSortedAnnotations(rgset, chromosomes = chromosomes)
-  granges <- splitChromosomes(granges, maxSplit = maxSplit)
-
-  beta <- getValues(rgset, type = 'beta')
-  # TODO: remove this later on
-  beta[ is.na(beta) ] <- mean(beta, na.rm = TRUE)
-
+findMethRegions <- function(granges, beta, allowParallel = FALSE, verbose = FALSE, ...) {
+  granges <- sortAnnotations(granges, verbose = verbose, ...)
+  granges <- splitChromosomes(granges, ...)
   if (verbose) message('[ Dataset was divided into ', length(granges), ' splits ]')
 
   if (allowParallel) {
+    if (verbose) message('[ Will try to parallelize using doParallel ]')
+
     clusters <- foreach::foreach(i = names(granges), .combine = rbind) %dopar% {
       methRegions(beta, granges[[ i ]], verbose = verbose, ...) %>%
         tibble::enframe(name = 'Name', 'Cluster') %>%
@@ -174,6 +171,8 @@ findMethRegions <- function(rgset, chromosomes = NULL, maxSplit = 50000, allowPa
         .[ , Cluster := paste(i, Cluster, sep = '_') ]
     }
   } else {
+    if (verbose) message('[ Parallel processing is disabled ]')
+
     clusters <- foreach::foreach(i = names(granges), .combine = rbind) %do% {
       methRegions(beta, granges[[ i ]], verbose = verbose, ...) %>%
         tibble::enframe(name = 'Name', 'Cluster') %>%
