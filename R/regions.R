@@ -48,11 +48,15 @@ split <- function(granges, maxSplit = 50000) {
 splitChromosomes <- function(granges, maxSplit = 50000) {
   byChromosome <- GenomicRanges::split(granges, seqnames(granges))
 
-  foreach::foreach(chr = byChromosome) %do% {
+  splits <- foreach::foreach(chr = byChromosome) %do% {
     split(chr, maxSplit = maxSplit)
   } %>%
     unlist %>%
     GenomicRanges::GRangesList()
+
+  names(splits) <- make.names(seq_along(splits))
+
+  splits
 }
 
 #'
@@ -121,7 +125,7 @@ methRegions <- function(
 
   if (verbose) message('[ Cuttig tree and calculating clusters ]')
   # TODO: test dynamic tree cut
-  k <- floor(ncol(X) / compressionRatio)
+  k <- max(floor(ncol(X) / compressionRatio), 1)
   clusters <- cutree(hclustering, k = k)
   bad <- which(table(clusters) < minClusterSize)
   clusters[ clusters %in% bad ] <- 0
@@ -144,4 +148,47 @@ prepareBeta <- function(beta, scale = TRUE, verbose = TRUE) {
   }
 
   return(beta)
+}
+
+#'
+#' @importFrom tibble enframe
+#' @import foreach
+#' @import dplyr
+#' @import data.table
+#'
+findMethRegions <- function(rgset, chromosomes = NULL, maxSplit = 50000, allowParallel = FALSE, verbose = FALSE, ...) {
+  granges <- extractSortedAnnotations(rgset, chromosomes = chromosomes)
+  granges <- splitChromosomes(granges, maxSplit = maxSplit)
+
+  beta <- getValues(rgset, type = 'beta')
+  # TODO: remove this later on
+  beta[ is.na(beta) ] <- mean(beta, na.rm = TRUE)
+
+  if (verbose) message('[ Dataset was divided into ', length(granges), ' splits ]')
+
+  if (allowParallel) {
+    clusters <- foreach::foreach(i = names(granges), .combine = rbind) %dopar% {
+      methRegions(beta, granges[[ i ]], verbose = verbose, ...) %>%
+        tibble::enframe(name = 'Name', 'Cluster') %>%
+        as.data.table %>%
+        .[ , Cluster := paste(i, Cluster, sep = '_') ]
+    }
+  } else {
+    clusters <- foreach::foreach(i = names(granges), .combine = rbind) %do% {
+      methRegions(beta, granges[[ i ]], verbose = verbose, ...) %>%
+        tibble::enframe(name = 'Name', 'Cluster') %>%
+        as.data.table %>%
+        .[ , Cluster := paste(i, Cluster, sep = '_') ]
+    }
+  }
+
+  # Correct cluster names
+  clusters <- data.table(Old = clusters[ , unique(Cluster) ]) %>%
+    .[ , New := make.names(1:.N) ] %>%
+    merge(clusters, by.x = 'Old', by.y = 'Cluster') %>%
+    setnames('New', 'ClusterID') %>%
+    .[ , Old := NULL ] %>%
+    .[ , list(Name, ClusterID) ]
+
+  clusters
 }
