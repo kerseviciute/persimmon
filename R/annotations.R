@@ -48,7 +48,7 @@ sortAnnotations <- function(granges, ...) {
     return(sortAnnotationsGRanges(granges, ...))
   }
 
-  if (!any(c('data.frame', 'data.table', 'DFrame') %in% class(granges))) {
+  if (any(c('data.frame', 'data.table', 'DFrame') %in% class(granges))) {
     return(sortAnnotationsDataTable(as.data.table(granges), ...))
   }
 
