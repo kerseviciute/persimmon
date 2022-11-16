@@ -126,7 +126,7 @@ methRegions <- function(
   if (verbose) message('[ Clustering scaled distance matrix ]')
   hclustering <- stats::hclust(as.dist(X), method = 'complete')
 
-  if (verbose) message('[ Cuttig tree and calculating clusters ]')
+  if (verbose) message('[ Cutting tree and calculating clusters ]')
   # TODO: test dynamic tree cut
   k <- max(floor(ncol(X) / compressionRatio), 1)
   clusters <- cutree(hclustering, k = k)
