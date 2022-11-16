@@ -168,9 +168,9 @@ prepareBeta <- function(beta, scale = TRUE, verbose = TRUE) {
 #'
 #' @export
 #'
-findMethRegions <- function(granges, beta, allowParallel = FALSE, verbose = FALSE, ...) {
-  granges <- sortAnnotations(granges, verbose = verbose, ...)
-  granges <- splitChromosomes(granges, ...)
+findMethRegions <- function(granges, beta, allowParallel = FALSE, verbose = FALSE, chromosomes = NULL, maxSplit = 50000, ...) {
+  granges <- sortAnnotations(granges, verbose = verbose, chromosomes = chromosomes)
+  granges <- splitChromosomes(granges, maxSplit = maxSplit)
   if (verbose) message('[ Dataset was divided into ', length(granges), ' splits ]')
 
   if (allowParallel) {
