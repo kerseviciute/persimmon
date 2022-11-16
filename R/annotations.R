@@ -52,7 +52,7 @@ sortAnnotations <- function(granges, ...) {
     return(sortAnnotationsDataTable(as.data.table(granges), ...))
   }
 
-  stop('Annotation sorting not implemented for objects of class ', class(granges), '. Please convert it to GRanges, data.frame or data.table object.')
+  stop('Annotation sorting not implemented for objects of class "', paste(class(granges), collapse = '", "'), , '". Please convert it to GRanges, data.frame or data.table object.')
 }
 
 #'
@@ -92,7 +92,7 @@ sortAnnotationsDataTable <- function(granges, chromosomes = NULL, verbose = FALS
 
   if (is.null(chromosomes)) {
     if (verbose) message('[ Selecting all available chromosomes from the supplied annotation ]')
-    chromosomes <- unique(annotations[ , chr ])
+    chromosomes <- unique(granges[ , chr ])
   } else {
     if (verbose) message('[ Selecting ', paste(chromosomes, collapse = ', '), ' chromosomes from the supplied annotation ]')
   }
