@@ -1,21 +1,21 @@
 #'
 #' GRanges Splitting
 #'
-#' @description Split GRanges of a single chromosome into splits smaller than maxSplit size.
-#' Takes into account the distance between individual CpGs and performs splitting at
-#' locations which are the furthest from each other.
+#' @description Splits GRanges of a single chromosome into splits smaller than maxSplit size.
+#' Takes into account the distance between individual CpGs and splits the dataset
+#' between CpGs that are furthest apart.
 #'
-#' @param granges GRanges object
-#' @param maxSplit maximum split size, integer
+#' @param granges GRanges object.
+#' @param maxSplit Maximum split size, integer (default: 50000).
 #'
-#' @import GenomicRanges
+#' @importFrom GenomicRanges start
 #'
 split <- function(granges, maxSplit = 50000) {
   if (length(granges) < maxSplit) {
     return(granges)
   }
 
-  delta <- diff(start(granges))
+  delta <- diff(GenomicRanges::start(granges))
   splitAt <- which.max(delta)
 
   grangesA <- granges[ 1:splitAt ]
@@ -35,18 +35,18 @@ split <- function(granges, maxSplit = 50000) {
 #'
 #' GRanges Splitting
 #'
-#' @description Split GRanges object into splits smaller than maxSplit size.
-#' Each chromosome is split separately, at locations which are furthest apart.
+#' @description Splits GRanges object into splits smaller than maxSplit size.
+#' Each chromosome is split separately, between CpGs that are furthest apart.
 #'
-#' @param granges GRanges object
-#' @param maxSplit maximum split size, integer
+#' @param granges GRanges object.
+#' @param maxSplit Maximum split size, integer (default: 50000).
 #'
-#' @import GenomicRanges
-#' @import foreach
+#' @importFrom GenomicRanges split seqnames GRangesList
+#' @importFrom foreach foreach %do%
 #' @importFrom dplyr %>%
 #'
 splitChromosomes <- function(granges, maxSplit = 50000) {
-  byChromosome <- GenomicRanges::split(granges, seqnames(granges))
+  byChromosome <- GenomicRanges::split(granges, GenomicRanges::seqnames(granges))
 
   splits <- foreach::foreach(chr = byChromosome) %do% {
     split(chr, maxSplit = maxSplit)
