@@ -1,93 +1,82 @@
 #'
-#' Sorted annotations
+#' Sorted Annotations
 #'
-#' @description Get sorted annotations from _RGChannelSet_, _RGChannelSetExtended_ or _MethylSet_
-#' object from specified chromosomes.
+#' @description Sorts annotations by position and chromosome.
 #'
-#' @param set a _RGChannelSet_, _RGChannelSetExtended_ or _MethylSet_ object
-#' @param chromosomes a list of chromosomes for which to extract annotations. Will
-#' return all chromosomes if not specified.
+#' @param granges An object of GRanges or data.frame type. For more details
+#' please check ?GRanges.sortAnnotations and ?data.table.sortAnnotations.
+#' @param chromosomes A list of chromosomes which should be returned from the
+#' full annotations. Returns all chromosomes if NULL.
+#' @param verbose Should workflow messages be printed? (default: FALSE)
 #'
-#' @import minfi
-#' @import data.table
-#' @import GenomicRanges
+#' @importFrom data.table as.data.table
 #'
-#' @export
-#'
-extractSortedAnnotations <- function(set, chromosomes = NULL) {
-  classes <- c('RGChannelSet', 'RGChannelSetExtended', 'MethylSet')
-  if (!any(classes %in% class(set))) {
-    stop('Object should be of type ', paste(classes, collapse = ', '))
-  }
-
-  annotations <- minfi::getAnnotation(set) %>%
-    as.data.table
-
-  if (is.null(chromosomes)) {
-    chromosomes <- unique(annotations[ , chr ])
-  }
-
-  map <- annotations %>%
-    .[ , list(chr, pos, Name) ] %>%
-    .[ chr %in% chromosomes ] %>%
-    GenomicRanges::makeGRangesFromDataFrame(keep.extra.columns = TRUE, start.field = 'pos', end.field = 'pos')
-
-  # Update rownames of the granges object
-  names(map) <- GenomicRanges::mcols(map) %>% .[ , 1 ]
-  GenomicRanges::mcols(map) <- NULL
-  map <- GenomicRanges::sort(map)
-
-  return(map)
-}
-
-#'
-#' @export
-#'
-sortAnnotations <- function(granges, ...) {
+sortAnnotations <- function(granges, chromosomes = NULL, verbose = FALSE) {
   if ('GRanges' %in% class(granges)) {
-    return(sortAnnotationsGRanges(granges, ...))
+    return(GRanges.sortAnnotations(granges, chromosomes = chromosomes, verbose = verbose))
   }
 
   if (any(c('data.frame', 'data.table', 'DFrame') %in% class(granges))) {
-    return(sortAnnotationsDataTable(as.data.table(granges), ...))
+    return(data.table.sortAnnotations(data.table::as.data.table(granges), chromosomes = chromosomes, verbose = verbose))
   }
 
   stop('Annotation sorting not implemented for objects of class "', paste(class(granges), collapse = '", "'), , '". Please convert it to GRanges, data.frame or data.table object.')
 }
 
 #'
-#' @export
+#' Sorted Annotations
 #'
-sortAnnotationsGRanges <- function(granges, chromosomes = NULL, verbose = FALSE) {
+#' @description Sorts annotations by position and chromosome.
+#'
+#' @param granges A GRanges object. Should contain CpG IDs as names or have a
+#' "Name" metadata column.
+#' @param chromosomes A list of chromosomes which should be returned from the
+#' full annotations. Returns all chromosomes if NULL.
+#' @param verbose Should workflow messages be printed? (default: FALSE)
+#'
+#' @importFrom GenomicRanges seqnames sort mcols
+#'
+GRanges.sortAnnotations <- function(granges, chromosomes = NULL, verbose = FALSE) {
   if (is.null(chromosomes)) {
     if (verbose) message('[ Selecting all available chromosomes from the supplied annotation ]')
-    chromosomes <- seqnames(granges)
+    chromosomes <- GenomicRanges::seqnames(granges)
   } else {
     if (verbose) message('[ Selecting ', paste(chromosomes, collapse = ', '), ' chromosomes from the supplied annotation ]')
   }
 
   if (is.null(names(granges))) {
-    if (!('Name' %in% colnames(mcols(granges)))) {
+    if (!('Name' %in% colnames(GenomicRanges::mcols(granges)))) {
       stop('Unable to determine probe positions from current annotation. Please set GRanges names to probe names or add a "Name" metadata column to your GRanges object')
     }
 
     if (verbose) message('[ Setting GRanges names to probe names ]')
-    names(granges) <- mcols(granges)[ , 'Name' ]
+    names(granges) <- GenomicRanges::mcols(granges)[ , 'Name' ]
   }
 
-  granges <- granges[ seqnames(granges) %in% chromosomes ]
+  granges <- granges[ GenomicRanges::seqnames(granges) %in% chromosomes ]
   granges <- GenomicRanges::sort(granges)
 
   return(granges)
 }
 
 #'
-#' @export
+#' Sorted Annotations
 #'
-sortAnnotationsDataTable <- function(granges, chromosomes = NULL, verbose = FALSE) {
+#' @description Sorts annotations by position and chromosome.
+#'
+#' @param granges A data.table object containing CpG annotations. Should contain
+#' 'Name', 'chr' and 'pos' columns.
+#' @param chromosomes A list of chromosomes which should be returned from the
+#' full annotations. Returns all chromosomes if NULL.
+#' @param verbose Should workflow messages be printed? (default: FALSE)
+#'
+#' @importFrom data.table .I
+#' @importFrom dplyr %>%
+#' @importFrom GenomicRanges makeGRangesFromDataFrame mcols sort
+#'
+data.table.sortAnnotations <- function(granges, chromosomes = NULL, verbose = FALSE) {
   if (!all(c('Name', 'chr', 'pos') %in% colnames(granges))) {
-    # TODO: proper error message
-    stop('Missing columns')
+    stop('Missing columns in annotation. These columns should be present: "Name", "chr" and "pos"')
   }
 
   if (is.null(chromosomes)) {
