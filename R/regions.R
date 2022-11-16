@@ -60,10 +60,6 @@ splitChromosomes <- function(granges, maxSplit = 50000) {
 }
 
 #'
-#' @importFrom Rfast Dist
-#' @importFrom stats ecdf
-#' @importFrom stats hclust
-#'
 #' TODO: explain all variables
 #' TODO: create an explanatory page with examples how to run the package
 #' TODO: check all calculations
@@ -71,6 +67,13 @@ splitChromosomes <- function(granges, maxSplit = 50000) {
 #' TODO: what could go wrong? at what scenarios will the sigmoid fail?
 #' TODO: should this method be exported?
 #' TODO: can it be used with m-values, not beta values? why? explanations!
+#'
+#' @importFrom Rfast Dist
+#' @importFrom stats ecdf
+#' @importFrom stats hclust
+#'
+#'
+#' @export
 #'
 methRegions <- function(
   beta,
@@ -135,10 +138,16 @@ methRegions <- function(
   return(clusters)
 }
 
+#'
+#' @export
+#'
 sigmoid <- function(x, k = 1) {
   1 / (1 + exp(-k * x))
 }
 
+#'
+#' @export
+#'
 prepareBeta <- function(beta, scale = TRUE, verbose = TRUE) {
   if (scale == TRUE) {
     if (verbose) message('[ Scaling methylation matrix ]')
@@ -155,6 +164,9 @@ prepareBeta <- function(beta, scale = TRUE, verbose = TRUE) {
 #' @import foreach
 #' @import dplyr
 #' @import data.table
+#'
+#'
+#' @export
 #'
 findMethRegions <- function(granges, beta, allowParallel = FALSE, verbose = FALSE, ...) {
   granges <- sortAnnotations(granges, verbose = verbose, ...)

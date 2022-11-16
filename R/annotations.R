@@ -40,6 +40,9 @@ extractSortedAnnotations <- function(set, chromosomes = NULL) {
   return(map)
 }
 
+#'
+#' @export
+#'
 sortAnnotations <- function(granges, ...) {
   if ('GRanges' %in% class(granges)) {
     return(sortAnnotationsGRanges(granges, ...))
@@ -52,6 +55,9 @@ sortAnnotations <- function(granges, ...) {
   stop('Annotation sorting not implemented for objects of class ', class(granges), '. Please convert it to GRanges, data.frame or data.table object.')
 }
 
+#'
+#' @export
+#'
 sortAnnotationsGRanges <- function(granges, chromosomes = NULL, verbose = FALSE) {
   if (is.null(chromosomes)) {
     if (verbose) message('[ Selecting all available chromosomes from the supplied annotation ]')
@@ -75,6 +81,9 @@ sortAnnotationsGRanges <- function(granges, chromosomes = NULL, verbose = FALSE)
   return(granges)
 }
 
+#'
+#' @export
+#'
 sortAnnotationsDataTable <- function(granges, chromosomes = NULL, verbose = FALSE) {
   if (!all(c('Name', 'chr', 'pos') %in% colnames(granges))) {
     # TODO: proper error message
