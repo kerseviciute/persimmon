@@ -4,7 +4,7 @@
 \alias{prepareBeta}
 \title{Beta Values}
 \usage{
-prepareBeta(beta, scale = TRUE, verbose = TRUE)
+prepareBeta(beta, scale = TRUE, verbose = TRUE, logFunction = message)
 }
 \arguments{
 \item{beta}{Beta value matrix.}
@@ -12,6 +12,9 @@ prepareBeta(beta, scale = TRUE, verbose = TRUE)
 \item{scale}{Should beta value matrix be scaled? (default: TRUE)}
 
 \item{verbose}{Should workflow messages be printed? (default: FALSE)}
+
+\item{logFunction}{Function to use for printing messages. Useful if you
+wish to setup custom logging (default: message).}
 }
 \description{
 Beta value preprocessing.

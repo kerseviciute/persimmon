@@ -4,7 +4,12 @@
 \alias{data.table.sortAnnotations}
 \title{Sorted Annotations}
 \usage{
-data.table.sortAnnotations(granges, chromosomes = NULL, verbose = FALSE)
+data.table.sortAnnotations(
+  granges,
+  chromosomes = NULL,
+  verbose = FALSE,
+  logFunction = message
+)
 }
 \arguments{
 \item{granges}{A data.table object containing CpG annotations. Should contain
@@ -14,6 +19,9 @@ data.table.sortAnnotations(granges, chromosomes = NULL, verbose = FALSE)
 full annotations. Returns all chromosomes if NULL.}
 
 \item{verbose}{Should workflow messages be printed? (default: FALSE)}
+
+\item{logFunction}{Function to use for printing messages. Useful if you
+wish to setup custom logging (default: message).}
 }
 \description{
 Sorts annotations by position and chromosome.
