@@ -118,10 +118,10 @@ methRegions <- function(
   }
 
   # TODO: discuss when this step should be performed
-  if (verbose) logFunction(paste0('[ Preparing methylation matrix ]'))
+  if (verbose) logFunction('[ Preparing methylation matrix ]')
   beta <- prepareBeta(beta, scale = scale, verbose = verbose, logFunction = logFunction)
 
-  if (verbose) logFunction(paste0('[ Calculating euclidean distance between probe methylation levels ]'))
+  if (verbose) logFunction('[ Calculating euclidean distance between probe methylation levels ]')
   distance <- Rfast::Dist(beta)
   distance <- distance / max(distance, na.rm = TRUE)
   colnames(distance) <- rownames(distance) <- names(granges)
@@ -131,22 +131,22 @@ methRegions <- function(
   w <- abs(w)
   colnames(w) <- rownames(w) <- names(granges)
 
-  if (verbose) logFunction(paste0('[ Estimating sigmoid function center ]'))
+  if (verbose) logFunction('[ Estimating sigmoid function center ]')
   n <- min(1e7, length(w))
   percentile <- stats::ecdf(sample(w, n))(thresholdDistance)
   center <- percentile
   rate <- 1 / percentile * rateFactor
 
-  if (verbose) logFunction(paste0('[ Computing scaled distance matrix ]'))
+  if (verbose) logFunction('[ Computing scaled distance matrix ]')
   ww <- w / max(w)
   ww <- sigmoid(ww - center, k = rate)
   X <- (1 - ww) * distance + (ww) * 1
   diag(X) <- 0
 
-  if (verbose) logFunction(paste0('[ Clustering scaled distance matrix ]'))
+  if (verbose) logFunction('[ Clustering scaled distance matrix ]')
   hclustering <- stats::hclust(as.dist(X), method = 'complete')
 
-  if (verbose) logFunction(paste0('[ Cutting tree and calculating clusters ]'))
+  if (verbose) logFunction('[ Cutting tree and calculating clusters ]')
   # TODO: test dynamic tree cut
   k <- max(floor(ncol(X) / compressionRatio), 1)
   clusters <- stats::cutree(hclustering, k = k)
@@ -181,13 +181,13 @@ sigmoid <- function(x, k = 1) {
 #'
 prepareBeta <- function(beta, scale = TRUE, verbose = TRUE, logFunction = message) {
   if (scale == TRUE) {
-    if (verbose) logFunction(paste0('[ Scaling methylation matrix ]'))
+    if (verbose) logFunction('[ Scaling methylation matrix ]')
     beta <- beta %>%
       base::t() %>%
       base::scale() %>%
       base::t()
   } else {
-    if (verbose) logFunction(paste0('[ Using non-scaled methylation matrix ]'))
+    if (verbose) logFunction('[ Using non-scaled methylation matrix ]')
   }
 
   return(beta)
@@ -229,7 +229,7 @@ findMethRegions <- function(
   if (verbose) logFunction(paste0('[ Dataset was divided into ', length(granges), ' splits ]'))
 
   if (allowParallel) {
-    if (verbose) logFunction(paste0('[ Will try to parallelize using doParallel ]'))
+    if (verbose) logFunction('[ Will try to parallelize using doParallel ]')
 
     clusters <- foreach::foreach(i = names(granges), .combine = rbind) %dopar% {
       methRegions(beta, granges[[ i ]], verbose = verbose, logFunction = logFunction,
@@ -242,7 +242,7 @@ findMethRegions <- function(
         .[ , Cluster := paste(i, Cluster, sep = '_') ]
     }
   } else {
-    if (verbose) logFunction(paste0('[ Parallel processing is disabled ]'))
+    if (verbose) logFunction('[ Parallel processing is disabled ]')
 
     clusters <- foreach::foreach(i = names(granges), .combine = rbind) %do% {
       methRegions(beta, granges[[ i ]], verbose = verbose, logFunction = logFunction,
