@@ -16,7 +16,8 @@ findMethRegions(
   compressionRatio = 10,
   seed = 23985034,
   allowParallel = FALSE,
-  verbose = FALSE
+  verbose = FALSE,
+  logFunction = message
 )
 }
 \arguments{
@@ -50,6 +51,9 @@ full annotations. Returns all chromosomes if NULL.}
 to use multiple cores, register cores using \code{doParallel} package.}
 
 \item{verbose}{Should workflow messages be printed? (default: FALSE)}
+
+\item{logFunction}{Function to use for printing messages. Useful if you
+wish to setup custom logging (default: message).}
 }
 \description{
 Methylation Regions

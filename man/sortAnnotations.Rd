@@ -4,7 +4,12 @@
 \alias{sortAnnotations}
 \title{Sorted Annotations}
 \usage{
-sortAnnotations(granges, chromosomes = NULL, verbose = FALSE)
+sortAnnotations(
+  granges,
+  chromosomes = NULL,
+  verbose = FALSE,
+  logFunction = message
+)
 }
 \arguments{
 \item{granges}{An object of GRanges or data.frame type. For more details
@@ -14,6 +19,9 @@ please check ?GRanges.sortAnnotations and ?data.table.sortAnnotations.}
 full annotations. Returns all chromosomes if NULL.}
 
 \item{verbose}{Should workflow messages be printed? (default: FALSE)}
+
+\item{logFunction}{Function to use for printing messages. Useful if you
+wish to setup custom logging (default: message).}
 }
 \description{
 Sorts annotations by position and chromosome.

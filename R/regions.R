@@ -84,6 +84,8 @@ splitChromosomes <- function(granges, maxSplit = 50000) {
 #' @param compressionRatio Compression ratio
 #' @param seed A seed for random number generator.
 #' @param verbose Should workflow messages be printed? (default: FALSE)
+#' @param logFunction Function to use for printing messages. Useful if you
+#' wish to setup custom logging (default: message).
 #'
 #' @importFrom Rfast Dist
 #' @importFrom stats ecdf
@@ -99,7 +101,8 @@ methRegions <- function(
   minClusterSize = 5,
   compressionRatio = 10,
   seed = 23985034,
-  verbose = FALSE) {
+  verbose = FALSE,
+  logFunction = message) {
   set.seed(seed)
 
   if (!all(names(granges) %in% rownames(beta))) {
@@ -115,10 +118,10 @@ methRegions <- function(
   }
 
   # TODO: discuss when this step should be performed
-  if (verbose) message('[ Preparing methylation matrix ]')
-  beta <- prepareBeta(beta, scale = scale, verbose = verbose)
+  if (verbose) logFunction(paste0('[ Preparing methylation matrix ]'))
+  beta <- prepareBeta(beta, scale = scale, verbose = verbose, logFunction = logFunction)
 
-  if (verbose) message('[ Calculating euclidean distance between probe methylation levels ]')
+  if (verbose) logFunction(paste0('[ Calculating euclidean distance between probe methylation levels ]'))
   distance <- Rfast::Dist(beta)
   distance <- distance / max(distance, na.rm = TRUE)
   colnames(distance) <- rownames(distance) <- names(granges)
@@ -128,22 +131,22 @@ methRegions <- function(
   w <- abs(w)
   colnames(w) <- rownames(w) <- names(granges)
 
-  if (verbose) message('[ Estimating sigmoid function center ]')
+  if (verbose) logFunction(paste0('[ Estimating sigmoid function center ]'))
   n <- min(1e7, length(w))
   percentile <- stats::ecdf(sample(w, n))(thresholdDistance)
   center <- percentile
   rate <- 1 / percentile * rateFactor
 
-  if (verbose) message('[ Computing scaled distance matrix ]')
+  if (verbose) logFunction(paste0('[ Computing scaled distance matrix ]'))
   ww <- w / max(w)
   ww <- sigmoid(ww - center, k = rate)
   X <- (1 - ww) * distance + (ww) * 1
   diag(X) <- 0
 
-  if (verbose) message('[ Clustering scaled distance matrix ]')
+  if (verbose) logFunction(paste0('[ Clustering scaled distance matrix ]'))
   hclustering <- stats::hclust(as.dist(X), method = 'complete')
 
-  if (verbose) message('[ Cutting tree and calculating clusters ]')
+  if (verbose) logFunction(paste0('[ Cutting tree and calculating clusters ]'))
   # TODO: test dynamic tree cut
   k <- max(floor(ncol(X) / compressionRatio), 1)
   clusters <- stats::cutree(hclustering, k = k)
@@ -173,16 +176,18 @@ sigmoid <- function(x, k = 1) {
 #' @param beta Beta value matrix.
 #' @param scale Should beta value matrix be scaled? (default: TRUE)
 #' @param verbose Should workflow messages be printed? (default: FALSE)
+#' @param logFunction Function to use for printing messages. Useful if you
+#' wish to setup custom logging (default: message).
 #'
-prepareBeta <- function(beta, scale = TRUE, verbose = TRUE) {
+prepareBeta <- function(beta, scale = TRUE, verbose = TRUE, logFunction = message) {
   if (scale == TRUE) {
-    if (verbose) message('[ Scaling methylation matrix ]')
+    if (verbose) logFunction(paste0('[ Scaling methylation matrix ]'))
     beta <- beta %>%
       base::t() %>%
       base::scale() %>%
       base::t()
   } else {
-    if (verbose) message('[ Using non-scaled methylation matrix ]')
+    if (verbose) logFunction(paste0('[ Using non-scaled methylation matrix ]'))
   }
 
   return(beta)
@@ -216,17 +221,18 @@ findMethRegions <- function(
   compressionRatio = 10,
   seed = 23985034,
   allowParallel = FALSE,
-  verbose = FALSE
+  verbose = FALSE,
+  logFunction = message
 ) {
-  granges <- sortAnnotations(granges, verbose = verbose, chromosomes = chromosomes)
+  granges <- sortAnnotations(granges, verbose = verbose, chromosomes = chromosomes, logFunction = logFunction)
   granges <- splitChromosomes(granges, maxSplit = maxSplit)
-  if (verbose) message('[ Dataset was divided into ', length(granges), ' splits ]')
+  if (verbose) logFunction(paste0('[ Dataset was divided into ', length(granges), ' splits ]'))
 
   if (allowParallel) {
-    if (verbose) message('[ Will try to parallelize using doParallel ]')
+    if (verbose) logFunction(paste0('[ Will try to parallelize using doParallel ]'))
 
     clusters <- foreach::foreach(i = names(granges), .combine = rbind) %dopar% {
-      methRegions(beta, granges[[ i ]], verbose = verbose,
+      methRegions(beta, granges[[ i ]], verbose = verbose, logFunction = logFunction,
                   thresholdDistance = thresholdDistance,
                   rateFactor = rateFactor, scale = scale,
                   minClusterSize = minClusterSize,
@@ -236,10 +242,10 @@ findMethRegions <- function(
         .[ , Cluster := paste(i, Cluster, sep = '_') ]
     }
   } else {
-    if (verbose) message('[ Parallel processing is disabled ]')
+    if (verbose) logFunction(paste0('[ Parallel processing is disabled ]'))
 
     clusters <- foreach::foreach(i = names(granges), .combine = rbind) %do% {
-      methRegions(beta, granges[[ i ]], verbose = verbose,
+      methRegions(beta, granges[[ i ]], verbose = verbose, logFunction = logFunction,
                   thresholdDistance = thresholdDistance,
                   rateFactor = rateFactor, scale = scale,
                   minClusterSize = minClusterSize,

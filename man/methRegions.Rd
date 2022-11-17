@@ -13,7 +13,8 @@ methRegions(
   minClusterSize = 5,
   compressionRatio = 10,
   seed = 23985034,
-  verbose = FALSE
+  verbose = FALSE,
+  logFunction = message
 )
 }
 \arguments{
@@ -39,6 +40,9 @@ correspond to CpG names and match row names of the beta value matrix.}
 \item{seed}{A seed for random number generator.}
 
 \item{verbose}{Should workflow messages be printed? (default: FALSE)}
+
+\item{logFunction}{Function to use for printing messages. Useful if you
+wish to setup custom logging (default: message).}
 }
 \value{
 Returns a named list. The names correspond to CpG names and the
