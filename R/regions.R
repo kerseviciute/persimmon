@@ -88,7 +88,8 @@ splitChromosomes <- function(granges, maxSplit = 50000) {
 #' @importFrom Rfast Dist
 #' @importFrom stats ecdf
 #' @importFrom stats hclust cutree
-#'
+#' @importFrom GenomicRanges start
+
 methRegions <- function(
   beta,
   granges,
@@ -123,7 +124,7 @@ methRegions <- function(
   colnames(distance) <- rownames(distance) <- names(granges)
 
   # TODO: this needs to be checked
-  w <- base::mapply(function(x) { x - start(granges) }, start(granges))
+  w <- base::mapply(function(x) { x - GenomicRanges::start(granges) }, GenomicRanges::start(granges))
   w <- abs(w)
   colnames(w) <- rownames(w) <- names(granges)
 
@@ -176,7 +177,10 @@ sigmoid <- function(x, k = 1) {
 prepareBeta <- function(beta, scale = TRUE, verbose = TRUE) {
   if (scale == TRUE) {
     if (verbose) message('[ Scaling methylation matrix ]')
-    beta <- beta %>% base::t() %>% base::scale() %>% base::t()
+    beta <- beta %>%
+      base::t() %>%
+      base::scale() %>%
+      base::t()
   } else {
     if (verbose) message('[ Using non-scaled methylation matrix ]')
   }
@@ -228,7 +232,7 @@ findMethRegions <- function(
                   minClusterSize = minClusterSize,
                   compressionRatio = compressionRatio, seed = seed) %>%
         tibble::enframe(name = 'Name', 'Cluster') %>%
-        data.table::as.data.table %>%
+        data.table::as.data.table() %>%
         .[ , Cluster := paste(i, Cluster, sep = '_') ]
     }
   } else {
@@ -241,7 +245,7 @@ findMethRegions <- function(
                   minClusterSize = minClusterSize,
                   compressionRatio = compressionRatio, seed = seed) %>%
         tibble::enframe(name = 'Name', 'Cluster') %>%
-        data.table::as.data.table %>%
+        data.table::as.data.table() %>%
         .[ , Cluster := paste(i, Cluster, sep = '_') ]
     }
   }
