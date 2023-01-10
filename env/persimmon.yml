@@ -1,0 +1,22 @@
+name: persimmon
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - r-essentials=4.2
+  - r-rfast=2.0.6
+  - bioconductor-genomeinfodbdata=1.2.9
+  - bioconductor-genomicranges=1.50.0
+  - r-mcl=1.0
+  - r-data.table=1.14.6
+  - r-dplyr=1.0.10
+  - r-foreach=1.5.2
+  - r-ggalt=0.4.0
+  - r-ggplot2=3.4.0
+  - r-reshape2=1.4.4
+  - r-tibble=3.1.8
+  - r-devtools=2.4.5
+  - r-logr=1.3.3
+  - r-doparallel=1.0.17
+  - r-pheatmap=1.0.12
+
