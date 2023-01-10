@@ -82,6 +82,7 @@ splitChromosomes <- function(granges, maxSplit = 50000) {
 #' @param minClusterSize Minimum number of CpGs per cluster, integer
 #' (default: 5).
 #' @param compressionRatio Compression ratio
+#' @param clusterMethod method for clustering (hierarchical or markov)
 #' @param seed A seed for random number generator.
 #' @param verbose Should workflow messages be printed? (default: FALSE)
 #' @param logFunction Function to use for printing messages. Useful if you
@@ -100,9 +101,11 @@ methRegions <- function(
   scale = TRUE,
   minClusterSize = 5,
   compressionRatio = 10,
+  clusterMethod = c('hierarchical', 'markov'),
   seed = 23985034,
   verbose = FALSE,
   logFunction = message) {
+  clusterMethod <- match.arg(clusterMethod)
   set.seed(seed)
 
   if (!all(names(granges) %in% rownames(beta))) {
@@ -144,12 +147,21 @@ methRegions <- function(
   diag(X) <- 0
 
   if (verbose) logFunction('[ Clustering scaled distance matrix ]')
-  hclustering <- stats::hclust(as.dist(X), method = 'complete')
 
-  if (verbose) logFunction('[ Cutting tree and calculating clusters ]')
-  # TODO: test dynamic tree cut
-  k <- max(floor(ncol(X) / compressionRatio), 1)
-  clusters <- stats::cutree(hclustering, k = k)
+  if (clusterMethod == 'hierarchical') {
+    hclustering <- stats::hclust(as.dist(X), method = 'complete')
+
+    if (verbose) logFunction('[ Cutting tree and calculating clusters ]')
+    # TODO: test dynamic tree cut
+    k <- max(floor(ncol(X) / compressionRatio), 1)
+    clusters <- stats::cutree(hclustering, k = k)
+  }
+
+  if (clusterMethod == 'markov') {
+    markov <- mcl(X, addLoops = FALSE, expansion = 1.5, inflation = 2, allow1 = FALSE)
+    clusters <- markov$Cluster
+  }
+
   bad <- which(table(clusters) < minClusterSize)
   clusters[ clusters %in% bad ] <- 0
   names(clusters) <- names(granges)
@@ -219,6 +231,7 @@ findMethRegions <- function(
   scale = TRUE,
   minClusterSize = 5,
   compressionRatio = 10,
+  clusterMethod = c('hierarchical', 'markov'),
   seed = 23985034,
   allowParallel = FALSE,
   verbose = FALSE,
@@ -235,7 +248,7 @@ findMethRegions <- function(
       methRegions(beta, granges[[ i ]], verbose = verbose, logFunction = logFunction,
                   thresholdDistance = thresholdDistance,
                   rateFactor = rateFactor, scale = scale,
-                  minClusterSize = minClusterSize,
+                  minClusterSize = minClusterSize, clusterMethod = clusterMethod,
                   compressionRatio = compressionRatio, seed = seed) %>%
         tibble::enframe(name = 'Name', 'Cluster') %>%
         data.table::as.data.table() %>%
@@ -248,7 +261,7 @@ findMethRegions <- function(
       methRegions(beta, granges[[ i ]], verbose = verbose, logFunction = logFunction,
                   thresholdDistance = thresholdDistance,
                   rateFactor = rateFactor, scale = scale,
-                  minClusterSize = minClusterSize,
+                  minClusterSize = minClusterSize, clusterMethod = clusterMethod,
                   compressionRatio = compressionRatio, seed = seed) %>%
         tibble::enframe(name = 'Name', 'Cluster') %>%
         data.table::as.data.table() %>%
