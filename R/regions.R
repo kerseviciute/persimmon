@@ -239,6 +239,8 @@ findMethRegions <- function(
 ) {
   granges <- sortAnnotations(granges, verbose = verbose, chromosomes = chromosomes, logFunction = logFunction)
   granges <- splitChromosomes(granges, maxSplit = maxSplit)
+  granges <- granges[ lapply(granges, length) > 1 ]
+  granges <- granges[ lapply(granges, length) > minClusterSize ]
   if (verbose) logFunction(paste0('[ Dataset was divided into ', length(granges), ' splits ]'))
 
   if (allowParallel) {
